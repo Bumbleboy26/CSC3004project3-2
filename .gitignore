@@ -1,0 +1,6 @@
+*.o
+testreader
+lookupserver
+bibleajax.cgi
+*.html
+core
