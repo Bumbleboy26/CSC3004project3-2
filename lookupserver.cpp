@@ -3,10 +3,8 @@
  * Computer Science, MVNU
  * CSC-3004 Introduction to Software Development
  *
- * main function for Project 1
+ * lookupserver for Project 3 Part 2
  *
- * NOTE: You may add code to this file, but do not
- * delete any code or delete any comments.
  *
  * STUDENT NAME: Coen Hall
  */
@@ -17,13 +15,13 @@
 #include "fifo.h"
 #include <iostream>
 #include <fstream>
-#include <string> 
+#include <string>
 #include <stdio.h>
 #include <stdlib.h>
 
 using namespace std;
 
-int main ()
+int main()
 {
    // Create Bible object to process the raw text file
    Bible webBible("/home/class/csc3004/Bibles/web-complete");
@@ -40,36 +38,62 @@ int main ()
 
    bool running = true;
 
+   // Keep the server running continuously
    while(running)
    {
+      //Read the message from the request pipe
       request.openread();
       string input = request.recv();
       request.fifoclose();
 
       cout << "Request received: " << input << endl;
 
-      Ref ref(input);
-      verse = webBible.lookup(ref, result);
+      int book, chapter, verseNum;
+
+
+      //Find the colons that separate book chapter, and verse
+      size_t p1 = input.find(':');
+      size_t p2 = input.find(':', p1 + 1);
+
+      book = stoi(input.substr(0, p1));
+      chapter = stoi(input.substr(p1 + 1, p2 - p1 - 1));
+      verseNum = stoi(input.substr(p2 + 1));
 
       string response;
+
+      if(book >= 1 || book <= 66 || chapter >= 1 || verseNum >= 1)
+      {
+         Ref ref(book, chapter, verseNum);
+         verse = webBible.lookup(ref, result);
       
-      if(result == SUCCESS)
-      {
-         response = "SUCCESS|" + verse.getVerse();
+         if(result == SUCCESS)
+         {
+            response = "SUCCESS|";
+            response += verse.getVerse();
+         }
+         else if(result == NO_BOOK)
+         {
+            response = "ERROR| no book";
+         }
+         else if(result == NO_CHAPTER)
+         {
+            response = "ERROR| no chapter";
+         }
+         else if(result == NO_VERSE)
+         {
+            response = "ERROR| no verse";
+         }
+         else
+         {
+            response = "ERROR| an error has occurred";
+         }
       }
-      else if(result == NO_BOOK)
+      else
       {
-         response = "ERROR| no book";
-      }
-      else if(result == NO_CHAPTER)
-      {
-         response = "ERROR| no chapter";
-      }
-      else if(result == NO_VERSE)
-      {
-         response = "ERROR| an error has occurred";
+         response = "ERROR| invalid input";
       }
 
+      //Send the message through the reply pipe 
       reply.openwrite();
       reply.send(response);
       reply.fifoclose();
