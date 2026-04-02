@@ -18,8 +18,7 @@ USER= coehall
 CC= g++
 CFLAGS= -g -std=c++11
 
-#all:	bibleajax.cgi PutCGI PutHTML
-all: testreader lookupserver
+all: bibleindex.cgi lookupserver PutCGI PutHTML
 
 # TODO: For bibleajax.cgi, add dependencies to include
 # compiled classes from Project 1 to be linked into the executable program
@@ -28,8 +27,11 @@ all: testreader lookupserver
 	# -l option is necessary to link with cgicc library
 
 # main program to handle AJAX/CGI requests for Bible references
-bibleajax.o:	bibleajax.cpp Bible.h Ref.h Verse.h
-	$(CC) $(CFLAGS) -c bibleajax.cpp
+bibleindex.cgi: bibleindex.o fifo.o
+	$(CC) $(CFLAGS) -o bibleindex.cgi bibleindex.o fifo.o -lcgicc
+
+bibleindex.o: bibleindex.cpp fifo.h
+	$(CC) $(CFLAGS) -c bibleindex.cpp
 
 testreader: testreader.o Bible.o Ref.o Verse.o
 	$(CC) $(CFLAGS) -o testreader testreader.o Bible.o Ref.o Verse.o
@@ -58,18 +60,18 @@ lookupserver.o: lookupserver.cpp fifo.h Bible.h Ref.h Verse.h
 lookupserver: lookupserver.o fifo.o
 	$(CC) $(CFLAGS) -o lookupserver lookupserver.o Bible.o Ref.o Verse.o fifo.o
 
-#PutCGI:	bibleajax.cgi
-	#chmod 755 bibleajax.cgi
-	#cp bibleajax.cgi /var/www/html/class/csc3004/$(USER)/cgi-bin
+PutCGI:	bibleindex.cgi
+	chmod 755 bibleindex.cgi
+	cp bibleindex.cgi /var/www/html/class/csc3004/$(USER)/cgi-bin
 
-	#echo "Current contents of your cgi-bin directory: "
-	#ls -l /var/www/html/class/csc3004/$(USER)/cgi-bin/
+	echo "Current contents of your cgi-bin directory: "
+	ls -l /var/www/html/class/csc3004/$(USER)/cgi-bin/
 
-#PutHTML:
-#	cp bibleajax.html /var/www/html/class/csc3004/$(USER)
-#
-#	echo "Current contents of your HTML directory: "
-#	ls -l /var/www/html/class/csc3004/$(USER)
+PutHTML:
+	cp bibleindex.html /var/www/html/class/csc3004/$(USER)
+
+	echo "Current contents of your HTML directory: "
+	ls -l /var/www/html/class/csc3004/$(USER)
 
 clean:
-	rm *.o core bibleajax.cgi testreader lookupserver
+	rm -f *.o core bibleajax.cgi bibleindex.cgi testreader lookupserver

@@ -3,7 +3,7 @@
  * Computer Science, MVNU
  * CSC-3004 Introduction to Software Development
  *
- * lookupserver for Project 3 Part 2
+ * lookupserver for Project 3 Part 3
  *
  *
  * STUDENT NAME: Coen Hall
@@ -48,20 +48,22 @@ int main()
 
       cout << "Request received: " << input << endl;
 
-      int book, chapter, verseNum;
+      int book, chapter, verseNum, numVerses;
 
 
       //Find the colons that separate book chapter, and verse
       size_t p1 = input.find(':');
       size_t p2 = input.find(':', p1 + 1);
+      size_t p3 = input.find(':', p2 + 1);
 
       book = stoi(input.substr(0, p1));
       chapter = stoi(input.substr(p1 + 1, p2 - p1 - 1));
-      verseNum = stoi(input.substr(p2 + 1));
+      verseNum = stoi(input.substr(p2 + 1, p3 - p2 - 1));
+      numVerses = stoi(input.substr(p3 + 1));
 
-      string response;
+      string response = "";
 
-      if(book >= 1 || book <= 66 || chapter >= 1 || verseNum >= 1)
+      if(book >= 1 && book <= 66 && chapter >= 1 && verseNum >= 1 && numVerses >= 1)
       {
          Ref ref(book, chapter, verseNum);
          verse = webBible.lookup(ref, result);
@@ -69,7 +71,23 @@ int main()
          if(result == SUCCESS)
          {
             response = "SUCCESS|";
+            response += to_string(verse.getRef().getBook()) + ":";
+            response += to_string(verse.getRef().getChapter()) + ":";
+            response += to_string(verse.getRef().getVerse()) + " ";
             response += verse.getVerse();
+
+            for(int i = 1; i < numVerses; i++)
+            {
+               Verse nextVerse = webBible.nextVerse(result);
+               if(result != SUCCESS)
+               {
+                  break;
+               }
+
+               response += "|";
+               response += to_string(nextVerse.getRef().getVerse());
+               response += nextVerse.getVerse();
+            }
          }
          else if(result == NO_BOOK)
          {
